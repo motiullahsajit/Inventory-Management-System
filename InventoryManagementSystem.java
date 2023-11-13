@@ -11,7 +11,7 @@ class InventoryManagementSystem {
     private static List<Employee> employees = new ArrayList<>();
 
     public static void main(String[] args) {
-
+        clearScreen();
         while (true) {
             System.out.println("Main Menu");
             System.out.println("1. Admin Login");
@@ -40,6 +40,7 @@ class InventoryManagementSystem {
     }
 
     private static void adminLogin() {
+        clearScreen();
         System.out.println("Enter admin username: ");
         String username = scanner.nextLine();
         System.out.println("Enter admin password: ");
@@ -53,6 +54,7 @@ class InventoryManagementSystem {
     }
 
     private static void adminMenu() {
+        clearScreen();
         while (true) {
             System.out.println("Admin Menu");
             System.out.println("1. Add Product");
@@ -128,6 +130,7 @@ class InventoryManagementSystem {
     }
 
     private static void addProduct() {
+        clearScreen();
         System.out.println("Enter product ID:");
         String productId = scanner.nextLine();
         System.out.println("Enter product name:");
@@ -149,6 +152,7 @@ class InventoryManagementSystem {
     }
 
     private static void editProduct() {
+        clearScreen();
         System.out.println("Enter product ID to edit:");
         String productId = scanner.nextLine();
 
@@ -172,6 +176,7 @@ class InventoryManagementSystem {
     }
 
     private static void deleteProduct() {
+        clearScreen();
         System.out.println("Enter product ID to delete:");
         String productId = scanner.nextLine();
 
@@ -185,6 +190,7 @@ class InventoryManagementSystem {
     }
 
     private static void addCategory() {
+        clearScreen();
         System.out.println("Enter category ID:");
         String categoryId = scanner.nextLine();
         System.out.println("Enter category name:");
@@ -197,6 +203,7 @@ class InventoryManagementSystem {
     }
 
     private static void removeCategory() {
+        clearScreen();
         System.out.println("Enter category ID to remove:");
         String categoryId = scanner.nextLine();
 
@@ -210,6 +217,7 @@ class InventoryManagementSystem {
     }
 
     private static void addSells() {
+        clearScreen();
         System.out.println("Enter product ID for selling:");
         String productId = scanner.nextLine();
 
@@ -232,6 +240,7 @@ class InventoryManagementSystem {
     }
 
     private static void generateSellsReport() {
+        clearScreen();
         System.out.println("Generating Sells Report:");
     
         double totalRevenue = sells.stream().mapToDouble(Sells::getTotalPrice).sum();
@@ -245,6 +254,7 @@ class InventoryManagementSystem {
     }
     
     private static void stockLevelManagement() {
+        clearScreen();
         System.out.println("Stock Level Management:");
     
         for (Product product : products) {
@@ -267,6 +277,7 @@ class InventoryManagementSystem {
     }
     
     private static void viewInventoryItems() {
+        clearScreen();
         System.out.println("Inventory Items:");
     
         List<Product> products = readProductsFromFile("products.txt");
@@ -304,6 +315,7 @@ class InventoryManagementSystem {
     
 
     private static void inventorySearchAndFiltering() {
+        clearScreen();
         System.out.println("Inventory Search and Filtering:");
         System.out.println("1. Search by Product ID");
         System.out.println("2. Search by Category");
@@ -329,6 +341,7 @@ class InventoryManagementSystem {
     }
 
     private static void searchByProductId() {
+        clearScreen();
         System.out.println("Enter product ID to search:");
         String productId = scanner.nextLine();
 
@@ -346,6 +359,7 @@ class InventoryManagementSystem {
     }
 
     private static void searchByCategory() {
+        clearScreen();
         System.out.println("Enter category ID to search:");
         String categoryId = scanner.nextLine();
 
@@ -370,6 +384,7 @@ class InventoryManagementSystem {
 
     
 private static void exportDataToCSVOrExcel() {
+    clearScreen();
     System.out.println("Export Data:");
     System.out.println("1. Export Inventory Data");
     System.out.println("2. Export Sells Data");
@@ -422,6 +437,7 @@ private static void exportDataToCSVOrExcel() {
     }
 
     private static void addEmployee() {
+        clearScreen();
         System.out.println("Enter employee username:");
         String username = scanner.nextLine();
         System.out.println("Enter employee password:");
@@ -466,6 +482,7 @@ private static void exportDataToCSVOrExcel() {
     }
 
     private static void removeEmployee() {
+        clearScreen();
         System.out.println("Enter employee username to remove:");
         String username = scanner.nextLine();
     
@@ -480,6 +497,7 @@ private static void exportDataToCSVOrExcel() {
     }
 
     private static void employeeLogin() {
+        clearScreen();
         System.out.println("Enter employee username: ");
         String username = scanner.nextLine();
         System.out.println("Enter employee password: ");
@@ -500,6 +518,7 @@ private static void exportDataToCSVOrExcel() {
     }
     
     private static void employeeMenu() {
+        clearScreen();
         while (true) {
             System.out.println("Employee Menu");
             System.out.println("1. Add Product");
@@ -547,6 +566,7 @@ private static void exportDataToCSVOrExcel() {
     }
     
     private static void placeOrders() {
+        clearScreen();
         System.out.println("Place Orders:");
     
         while (true) {
@@ -584,14 +604,17 @@ private static void exportDataToCSVOrExcel() {
     }
     
     private static Product findProductById(String productId) {
+        List<Product> products = readProductsFromFile("products.txt");
+    
         for (Product product : products) {
             if (product.getProductId().equals(productId)) {
                 return product;
             }
         }
+    
         return null;
     }
-
+    
     private static Category findCategoryById(String categoryId) {
         for (Category category : categories) {
             if (category.getCategoryId().equals(categoryId)) {
@@ -601,5 +624,18 @@ private static void exportDataToCSVOrExcel() {
         return null;
     }
 
+    private static void clearScreen() {
+        try {
+            if (System.getProperty("os.name").contains("Windows")) {
+                new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
+            } else {
+                System.out.print("\033[H\033[2J");
+                System.out.flush();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
     
 }
+
