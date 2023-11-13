@@ -1,101 +1,279 @@
+import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
-public class InventoryManagementSystem {
+
+class User {
+    private String username;
+    private String password;
+
+    public User(String username, String password) {
+        this.username = username;
+        this.password = password;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+}
+
+class Admin extends User {
+    public Admin(String username, String password) {
+        super(username, password);
+    }
+}
+
+
+class Employee extends User {
+    public Employee(String username, String password) {
+        super(username, password);
+    }
+
+    // Save employee data to a text file
+    public void saveToFile() {
+        try (PrintWriter writer = new PrintWriter(new FileWriter("employees.txt", true))) {
+            writer.println(getUsername() + "," + getPassword());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+      public void removeFromDatabase() {
+        List<String> lines = new ArrayList<>();
+    
+        try (BufferedReader reader = new BufferedReader(new FileReader("employees.txt"))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (!line.startsWith(getUsername() + ",")) {
+                    lines.add(line);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    
+        try (PrintWriter writer = new PrintWriter(new FileWriter("employees.txt"))) {
+            for (String line : lines) {
+                writer.println(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    
+}
+
+class Product {
+    private String productId;
+    private String productName;
+    private double price;
+    private int quantity;
+    private String categoryId; // New field for category
+    private String categoryName; // New field for category name
+
+    public Product(String productId, String productName, double price, int quantity, String categoryId, String categoryName) {
+        this.productId = productId;
+        this.productName = productName;
+        this.price = price;
+        this.quantity = quantity;
+        this.categoryId = categoryId;
+        this.categoryName = categoryName;
+    }
+
+    public String getProductId() {
+        return productId;
+    }
+
+    public String getProductName() {
+        return productName;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
+    }
+
+    public void setProductName(String productName) {
+        this.productName = productName;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
+    }
+
+    public String getCategoryId() {
+        return categoryId;
+    }
+
+    public String getCategoryName() {
+        return categoryName;
+    }
+
+    public void saveToFile() {
+        try (PrintWriter writer = new PrintWriter(new FileWriter("products.txt", true))) {
+            writer.println(productId + "," + productName + "," + price + "," + quantity + "," + categoryId + "," + categoryName);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+class Category {
+    private String categoryId;
+    private String categoryName;
+
+    public Category(String categoryId, String categoryName) {
+        this.categoryId = categoryId;
+        this.categoryName = categoryName;
+    }
+
+    public String getCategoryId() {
+        return categoryId;
+    }
+
+    public String getCategoryName() {
+        return categoryName;
+    }
+
+    public void saveToFile() {
+        try (PrintWriter writer = new PrintWriter(new FileWriter("categories.txt", true))) {
+            writer.println(categoryId + "," + categoryName);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+class Sells {
+    private String productId;
+    private int quantitySold;
+    private double totalPrice;
+
+    public Sells(String productId, int quantitySold, double totalPrice) {
+        this.productId = productId;
+        this.quantitySold = quantitySold;
+        this.totalPrice = totalPrice;
+    }
+
+    public String getProductId() {
+        return productId;
+    }
+
+    public int getQuantitySold() {
+        return quantitySold;
+    }
+
+    public double getTotalPrice() {
+        return totalPrice;
+    }
+
+    public void saveToFile() {
+        try (PrintWriter writer = new PrintWriter(new FileWriter("sells.txt", true))) {
+            writer.println(serialize());
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("Error saving sells data to file.");
+        }
+    }
+
+    private String serialize() {
+        return String.format("%s,%d,%.2f", productId, quantitySold, totalPrice);
+    }
+
+    public static Sells deserialize(String data) {
+        Scanner scanner = new Scanner(data);
+        scanner.useDelimiter(",");
+        String productId = scanner.next();
+        int quantitySold = scanner.nextInt();
+        double totalPrice = scanner.nextDouble();
+        scanner.close();
+        return new Sells(productId, quantitySold, totalPrice);
+    }
+}
+
+class InventoryManagementSystem {
     private static Scanner scanner = new Scanner(System.in);
-    private static Inventory inventory = new Inventory();
-    private static EmployeeManagement employeeManagement = new EmployeeManagement();
-    private static Map<String, String> userCredentials = new HashMap<>(); 
+    private static List<Product> products = new ArrayList<>();
+    private static List<Category> categories = new ArrayList<>();
+    private static List<Sells> sells = new ArrayList<>();
+    private static List<Employee> employees = new ArrayList<>();
 
     public static void main(String[] args) {
-        initializeData();
-        int mainChoice;
 
-        do {
+        while (true) {
             System.out.println("Main Menu");
             System.out.println("1. Admin Login");
             System.out.println("2. Employee Login");
             System.out.println("3. Exit");
-            System.out.print("Enter your choice: ");
-            mainChoice = scanner.nextInt();
+            System.out.print("Enter you choice: ");
 
-            switch (mainChoice) {
+            int choice = scanner.nextInt();
+            scanner.nextLine(); // Consume the newline
+
+            switch (choice) {
                 case 1:
-                    adminLoginMenu();
+                    adminLogin();
                     break;
                 case 2:
-                    employeeLoginMenu();
+                    employeeLogin();
                     break;
                 case 3:
                     System.out.println("Exiting the system. Goodbye!");
+                    System.exit(0);
                     break;
                 default:
-                    System.out.println("Invalid choice. Please enter a valid option.");
+                    System.out.println("Invalid choice. Please enter again.");
             }
-        } while (mainChoice != 3);
+        }
     }
 
-    private static void adminLoginMenu() {
-        System.out.print("Enter Admin username: ");
-        String username = scanner.next();
-        System.out.print("Enter Admin password: ");
-        String password = scanner.next();
+    private static void adminLogin() {
+        System.out.println("Enter admin username: ");
+        String username = scanner.nextLine();
+        System.out.println("Enter admin password: ");
+        String password = scanner.nextLine();
 
-        if (authenticateUser(username, password, "admin")) {
+        if (username.equals("admin") && password.equals("admin123")) {
             adminMenu();
         } else {
-            System.out.println("Authentication failed. Returning to the main menu.");
+            System.out.println("Invalid credentials. Returning to the main menu.");
         }
-    }
-
-    private static void employeeLoginMenu() {
-        System.out.print("Enter Employee username: ");
-        String username = scanner.next();
-        System.out.print("Enter Employee password: ");
-        String password = scanner.next();
-
-        if (authenticateUser(username, password, "employee")) {
-            employeeMenu();
-        } else {
-            System.out.println("Authentication failed. Returning to the main menu.");
-        }
-    }
-    
-    private static boolean authenticateUser(String username, String password, String userType) {
-        if (userType.equals("admin") && username.equals("admin") && password.equals("admin12345")) {
-            return true;
-        } else if (userType.equals("employee")) {
-            for (Map.Entry<String, String> entry : employeeManagement.getEmployees().entrySet()) {
-                String[] credentials = entry.getValue().split(":");
-                if (entry.getKey().equals(username) && credentials.length == 2 && credentials[1].equals(password)) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
     private static void adminMenu() {
-        int adminChoice;
-
-        do {
+        while (true) {
             System.out.println("Admin Menu");
             System.out.println("1. Add Product");
             System.out.println("2. Edit Product");
             System.out.println("3. Delete Product");
             System.out.println("4. Add Category");
-            System.out.println("5. Generate Reports");
-            System.out.println("6. Stock Level Management");
-            System.out.println("7. Order and Purchase Management");
-            System.out.println("8. Inventory Search and Filtering");
-            System.out.println("9. Export Data to CSV or Excel");
-            System.out.println("10. Export Purchase Data to CSV or Excel");  // New option
-            System.out.println("11. Add Employee");
-            System.out.println("12. Remove Employee");
-            System.out.println("13. Logout");
-            System.out.print("Enter your choice: ");
-            adminChoice = scanner.nextInt();
+            System.out.println("5. Remove Category");
+            System.out.println("6. Add Sells");
+            System.out.println("7. Generate Sells Report");
+            System.out.println("8. Stock Level Management");
+            System.out.println("9. Order New Stock");
+            System.out.println("10. View Inventory Items");
+            System.out.println("11. Inventory Search and Filtering");
+            System.out.println("12. Export Data to CSV or Excel");
+            System.out.println("13. Add Employee");
+            System.out.println("14. Remove Employee");
+            System.out.println("15. Logout");
+            System.out.print("Enter you choice: ");
 
-            switch (adminChoice) {
+            int choice = scanner.nextInt();
+            scanner.nextLine(); // Consume the newline
+
+            switch (choice) {
                 case 1:
                     addProduct();
                     break;
@@ -109,210 +287,430 @@ public class InventoryManagementSystem {
                     addCategory();
                     break;
                 case 5:
-                    inventory.generateReports();
+                    removeCategory();
                     break;
                 case 6:
-                    stockLevelManagement();
+                    addSells();
                     break;
                 case 7:
-                    orderAndPurchaseManagement();
+                    generateSellsReport();
                     break;
                 case 8:
-                    inventorySearchAndFilter();
+                    stockLevelManagement();
                     break;
                 case 9:
-                    exportData();
+                    orderNewStock();
                     break;
                 case 10:
-                    exportPurchaseData();  
+                    viewInventoryItems();
                     break;
                 case 11:
-                    addEmployee();
+                    inventorySearchAndFiltering();
                     break;
                 case 12:
-                    removeEmployee();
+                    exportDataToCSVOrExcel();
                     break;
                 case 13:
-                    System.out.println("Logging out of Admin account.");
+                    addEmployee();
                     break;
+                case 14:
+                    removeEmployee();
+                    break;
+                case 15:
+                    System.out.println("Logging out from admin account.");
+                    return;
                 default:
-                    System.out.println("Invalid choice. Please enter a valid option.");
+                    System.out.println("Invalid choice. Please enter again.");
             }
-        } while (adminChoice != 13);
-    }
-
-    private static void clearScreen() {
-        try {
-            final String os = System.getProperty("os.name");
-            if (os.contains("Windows")) {
-                new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
-            } else {
-                Runtime.getRuntime().exec("clear");
-            }
-        } catch (final Exception e) {
-            System.out.println("Error while clearing the screen: " + e.getMessage());
         }
     }
 
     private static void addProduct() {
-        System.out.println("Enter product details:");
-        System.out.print("Name: ");
-        String name = scanner.next();
-        System.out.print("Price: ");
+        System.out.println("Enter product ID:");
+        String productId = scanner.nextLine();
+        System.out.println("Enter product name:");
+        String productName = scanner.nextLine();
+        System.out.println("Enter product price:");
         double price = scanner.nextDouble();
-        System.out.print("Quantity: ");
+        System.out.println("Enter product quantity:");
         int quantity = scanner.nextInt();
-        System.out.print("Category: ");
-        String category = scanner.next();
-
-        inventory.addProduct(new Product(name, price, quantity, category));
+        scanner.nextLine(); // Consume the newline
+        System.out.println("Enter category ID:");
+        String categoryId = scanner.nextLine();
+        System.out.println("Enter category name:");
+        String categoryName = scanner.nextLine();
+    
+        Product newProduct = new Product(productId, productName, price, quantity, categoryId, categoryName);
+        products.add(newProduct);
+        newProduct.saveToFile();
         System.out.println("Product added successfully.");
     }
 
     private static void editProduct() {
-        System.out.print("Enter the name of the product to edit: ");
-        String productName = scanner.next();
+        System.out.println("Enter product ID to edit:");
+        String productId = scanner.nextLine();
 
-        Product product = findProductByName(productName);
+        Product product = findProductById(productId);
         if (product != null) {
-            System.out.println("Enter new details for the product:");
-            System.out.print("New Price: ");
+            System.out.println("Enter new product name:");
+            String newName = scanner.nextLine();
+            System.out.println("Enter new product price:");
             double newPrice = scanner.nextDouble();
-            System.out.print("New Quantity: ");
+            System.out.println("Enter new product quantity:");
             int newQuantity = scanner.nextInt();
-            System.out.print("New Category: ");
-            String newCategory = scanner.next();
 
-            inventory.editProduct(productName, newPrice, newQuantity, newCategory);
-            System.out.println("Product updated successfully.");
+            product.setProductName(newName);
+            product.setPrice(newPrice);
+            product.setQuantity(newQuantity);
+
+            System.out.println("Product edited successfully.");
         } else {
             System.out.println("Product not found.");
         }
     }
 
     private static void deleteProduct() {
-        System.out.print("Enter the name of the product to delete: ");
-        String productName = scanner.next();
+        System.out.println("Enter product ID to delete:");
+        String productId = scanner.nextLine();
 
-        Product product = findProductByName(productName);
+        Product product = findProductById(productId);
         if (product != null) {
-            inventory.deleteProduct(productName);
+            products.remove(product);
             System.out.println("Product deleted successfully.");
         } else {
             System.out.println("Product not found.");
         }
     }
 
-    private static Product findProductByName(String productName) {
-        for (Product product : inventory.getProducts()) {
-            if (product.getName().equals(productName)) {
-                return product;
-            }
-        }
-        return null;
-    }
-
     private static void addCategory() {
-        System.out.print("Enter the name of the new category: ");
-        String newCategory = scanner.next();
+        System.out.println("Enter category ID:");
+        String categoryId = scanner.nextLine();
+        System.out.println("Enter category name:");
+        String categoryName = scanner.nextLine();
 
-        inventory.addCategory(newCategory);
+        Category newCategory = new Category(categoryId, categoryName);
+        categories.add(newCategory);
+        newCategory.saveToFile();
         System.out.println("Category added successfully.");
     }
 
+    private static void removeCategory() {
+        System.out.println("Enter category ID to remove:");
+        String categoryId = scanner.nextLine();
 
-    private static void stockLevelManagement() {
-        inventory.stockLevelManagement();
+        Category category = findCategoryById(categoryId);
+        if (category != null) {
+            categories.remove(category);
+            System.out.println("Category removed successfully.");
+        } else {
+            System.out.println("Category not found.");
+        }
     }
 
-    private static void orderAndPurchaseManagement() {
-        System.out.println("Order and Purchase Management Menu");
+    private static void addSells() {
+        System.out.println("Enter product ID for selling:");
+        String productId = scanner.nextLine();
 
-        for (Product product : inventory.getProducts()) {
-            if (product.getQuantity() < 5) {
-                int orderQuantity = 10; 
-                double totalPrice = orderQuantity * product.getPrice();
+        Product product = findProductById(productId);
+        if (product != null) {
+            System.out.println("Enter quantity sold:");
+            int quantitySold = scanner.nextInt();
+            double totalPrice = quantitySold * product.getPrice();
 
-                Purchase purchase = new Purchase(product, orderQuantity, totalPrice);
-                inventory.getPurchases().add(purchase);  
-                product.setQuantity(product.getQuantity() + orderQuantity);
+            Sells newSells = new Sells(productId, quantitySold, totalPrice);
+            sells.add(newSells);
+            newSells.saveToFile();
 
-                System.out.println("Purchase Order placed: " + purchase);
+            // Update product quantity
+            product.setQuantity(product.getQuantity() - quantitySold);
+
+            System.out.println("Sells recorded successfully.");
+        } else {
+            System.out.println("Product not found.");
+        }
+    }
+
+    private static void generateSellsReport() {
+        System.out.println("Generating Sells Report:");
+    
+        // Summarize sells data
+        double totalRevenue = sells.stream().mapToDouble(Sells::getTotalPrice).sum();
+        System.out.println("Total Revenue: $" + totalRevenue);
+    
+        // Display individual sells
+        for (Sells sell : sells) {
+            System.out.println("Product ID: " + sell.getProductId() +
+                    " | Quantity Sold: " + sell.getQuantitySold() +
+                    " | Total Price: $" + sell.getTotalPrice());
+        }
+    }
+    
+    private static void stockLevelManagement() {
+        System.out.println("Stock Level Management:");
+    
+        // Display stock levels for each product
+        for (Product product : products) {
+            System.out.println("Product ID: " + product.getProductId() +
+                    " | Product Name: " + product.getProductName() +
+                    " | Stock Level: " + product.getQuantity());
+        }
+    }
+    
+    private static void orderNewStock() {
+        System.out.println("Ordering New Stock:");
+    
+        // Simulate ordering new stock (increase quantity for each product)
+        for (Product product : products) {
+            int currentStock = product.getQuantity();
+            int additionalStock = 10; // You can adjust this value as needed
+            product.setQuantity(currentStock + additionalStock);
+            System.out.println("Ordered " + additionalStock + " units of " +
+                    product.getProductName() + " (Product ID: " + product.getProductId() + ")");
+        }
+    }
+    
+    private static void viewInventoryItems() {
+        System.out.println("Inventory Items:");
+    
+        List<Product> products = readProductsFromFile("products.txt");
+    
+        if (products.isEmpty()) {
+            System.out.println("No products found in the inventory.");
+        } else {
+            for (Product product : products) {
+                System.out.println(product.getProductId() + " - " + product.getProductName() +
+                        " - Quantity: " + product.getQuantity());
             }
         }
     }
-
-    private static void inventorySearchAndFilter() {
-        System.out.print("Enter the category for inventory search: ");
-        String category = scanner.next();
-
-        inventory.inventorySearchAndFilter(category);
+    
+    private static List<Product> readProductsFromFile(String filename) {
+        List<Product> products = new ArrayList<>();
+    
+        try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(",");
+                if (parts.length == 6) { // Assuming 6 fields: productId, productName, price, quantity, categoryId, categoryName
+                    Product product = new Product(parts[0], parts[1], Double.parseDouble(parts[2]),
+                            Integer.parseInt(parts[3]), parts[4], parts[5]);
+                    products.add(product);
+                }
+            }
+        } catch (IOException | NumberFormatException e) {
+            e.printStackTrace();
+            System.err.println("Error reading products from file.");
+        }
+    
+        return products;
     }
+    
 
-    private static void exportData() {
-        System.out.println("Export Data Menu");
-        System.out.println("1. Export Data Sells to CSV or Excel");
-        System.out.println("2. Export Data Product to CSV or Excel");
-        System.out.println("3. Export Data Purchase to CSV or Excel");
-        System.out.print("Enter your choice: ");
-        int exportChoice = scanner.nextInt();
+    private static void inventorySearchAndFiltering() {
+        System.out.println("Inventory Search and Filtering:");
+        System.out.println("1. Search by Product ID");
+        System.out.println("2. Search by Category");
+        System.out.println("3. Back to Menu");
+        System.out.print("Enter you choice: ");
 
-        List<Product> productList = inventory.getProducts();
-        List<Purchase> purchaseList = inventory.getPurchases();
+        int choice = scanner.nextInt();
+        scanner.nextLine(); // Consume the newline
 
-        switch (exportChoice) {
+        switch (choice) {
             case 1:
-                inventory.exportDataToCSVOrExcel(productList, "SellsData.csv");
+                searchByProductId();
                 break;
             case 2:
-                inventory.exportDataToCSVOrExcel(productList, "ProductData.csv");
+                searchByCategory();
                 break;
             case 3:
-                inventory.exportPurchaseDataToCSVOrExcel(purchaseList, "PurchaseData.csv");
+                System.out.println("Returning to the main menu.");
                 break;
             default:
-                System.out.println("Invalid choice. Please enter a valid option.");
+                System.out.println("Invalid choice. Returning to the main menu.");
         }
     }
 
-    private static void exportPurchaseData() {
-        System.out.println("Export Purchase Data Menu");
-        System.out.print("Enter the filename for the export: ");
-        String fileName = scanner.next();
+    private static void searchByProductId() {
+        System.out.println("Enter product ID to search:");
+        String productId = scanner.nextLine();
 
-        List<Purchase> purchaseList = inventory.getPurchases();
-        inventory.exportPurchaseDataToCSVOrExcel(purchaseList, fileName);
+        Product product = findProductById(productId);
+
+        if (product != null) {
+            System.out.println("Product found:");
+            System.out.println("Product ID: " + product.getProductId());
+            System.out.println("Product Name: " + product.getProductName());
+            System.out.println("Price: $" + product.getPrice());
+            System.out.println("Quantity: " + product.getQuantity());
+        } else {
+            System.out.println("Product not found.");
+        }
+    }
+
+    private static void searchByCategory() {
+        System.out.println("Enter category ID to search:");
+        String categoryId = scanner.nextLine();
+
+        // Find products in the specified category
+        List<Product> productsInCategory = products.stream()
+                .filter(product -> product.getCategoryId().equals(categoryId))
+                .collect(Collectors.toList());
+
+        if (!productsInCategory.isEmpty()) {
+            System.out.println("Products in Category:");
+            for (Product product : productsInCategory) {
+                System.out.println("Product ID: " + product.getProductId());
+                System.out.println("Product Name: " + product.getProductName());
+                System.out.println("Price: $" + product.getPrice());
+                System.out.println("Quantity: " + product.getQuantity());
+                System.out.println("-------------------------");
+            }
+        } else {
+            System.out.println("No products found in the specified category.");
+        }
+    }
+
+
+    
+private static void exportDataToCSVOrExcel() {
+    System.out.println("Export Data:");
+    System.out.println("1. Export Inventory Data");
+    System.out.println("2. Export Sells Data");
+    System.out.println("3. Back to Menu");
+    System.out.print("Enter you choice: ");
+
+    int choice = scanner.nextInt();
+    scanner.nextLine(); // Consume the newline
+
+    switch (choice) {
+        case 1:
+            exportInventoryData();
+            break;
+        case 2:
+            exportSellsData();
+            break;
+        case 3:
+            System.out.println("Returning to the main menu.");
+            break;
+        default:
+            System.out.println("Invalid choice. Returning to the main menu.");
+    }
+}
+
+    private static void exportInventoryData() {
+        exportData("inventory.csv", products);
+        System.out.println("Inventory data exported to 'inventory.csv'");
+    }
+
+    private static void exportSellsData() {
+        exportData("sells.csv", sells);
+        System.out.println("Sells data exported to 'sells.csv'");
+    }
+
+    private static <T> void exportData(String filename, List<T> dataList) {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(filename))) {
+            if (!dataList.isEmpty()) {
+                // Write header
+                writer.println(dataList.get(0).toString());
+
+                // Write data
+                for (T data : dataList) {
+                    writer.println(data);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("Error exporting data to file.");
+        }
     }
 
     private static void addEmployee() {
-        System.out.print("Enter the name of the new employee: ");
-        String newEmployee = scanner.next();
-        System.out.print("Enter the username for the new employee: ");
-        String username = scanner.next();
-        System.out.print("Enter the password for the new employee: ");
-        String password = scanner.next();
-
-        employeeManagement.addEmployee(newEmployee, username, password);
+        System.out.println("Enter employee username:");
+        String username = scanner.nextLine();
+        System.out.println("Enter employee password:");
+        String password = scanner.nextLine();
+    
+        Employee newEmployee = new Employee(username, password);
+        employees.add(newEmployee);
+        newEmployee.saveToFile(); // Save employee data to file
         System.out.println("Employee added successfully.");
+    }
+    
+private static List<Employee> readEmployeesFromFile(String filename) {
+    List<Employee> employees = new ArrayList<>();
+
+    try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
+        String line;
+        while ((line = reader.readLine()) != null) {
+            String[] parts = line.split(",");
+            if (parts.length == 2) { // Assuming 2 fields: username, password
+                Employee employee = new Employee(parts[0], parts[1]);
+                employees.add(employee);
+            }
+        }
+    } catch (IOException e) {
+        e.printStackTrace();
+        System.err.println("Error reading employees from file.");
+    }
+
+    return employees;
+}
+
+
+    private static Employee findEmployeeByUsername(String username) {
+        List<Employee> employees = readEmployeesFromFile("employees.txt");
+
+        for (Employee employee : employees) {
+            if (employee.getUsername().equals(username)) {
+                return employee;
+            }
+        }
+
+        return null;
     }
 
     private static void removeEmployee() {
-        System.out.print("Enter the name of the employee to remove: ");
-        String employeeToRemove = scanner.next();
+        System.out.println("Enter employee username to remove:");
+        String username = scanner.nextLine();
     
-        if (employeeManagement.getEmployees().containsKey(employeeToRemove)) {
-            employeeManagement.removeEmployee(employeeToRemove);
+        Employee employee = findEmployeeByUsername(username);
+        if (employee != null) {
+            employees.remove(employee);
+            employee.removeFromDatabase(); // Remove employee data from file
             System.out.println("Employee removed successfully.");
         } else {
             System.out.println("Employee not found.");
         }
     }
+
+    private static void employeeLogin() {
+        System.out.println("Enter employee username: ");
+        String username = scanner.nextLine();
+        System.out.println("Enter employee password: ");
+        String password = scanner.nextLine();
     
-
+        Employee employee = findEmployeeByUsername(username);
+    
+        if (employee != null && verifyEmployeePassword(employee, password)) {
+            System.out.println("Employee login successful.");
+            employeeMenu();  // Redirect to the employee menu
+        } else {
+            System.out.println("Invalid credentials. Returning to the main menu.");
+        }
+    }
+    
+    
+    private static boolean verifyEmployeePassword(Employee employee, String enteredPassword) {
+        // Implement a more secure password verification mechanism here
+        // For simplicity, we compare passwords as plain text in this example
+        return employee.getPassword().equals(enteredPassword);
+    }
+    
+  
+    
     private static void employeeMenu() {
-        int employeeChoice;
-
-        do {
+        while (true) {
             System.out.println("Employee Menu");
             System.out.println("1. Add Product");
             System.out.println("2. Edit Product");
@@ -320,12 +718,14 @@ public class InventoryManagementSystem {
             System.out.println("4. View Inventory Items");
             System.out.println("5. Search and Filter Inventory");
             System.out.println("6. Place Orders");
-            System.out.println("7. View Purchases");
+            System.out.println("7. Add Sells");
             System.out.println("8. Logout");
-            System.out.print("Enter your choice: ");
-            employeeChoice = scanner.nextInt();
-
-            switch (employeeChoice) {
+            System.out.print("Enter you choice: ");
+    
+            int choice = scanner.nextInt();
+            scanner.nextLine(); // Consume the newline
+    
+            switch (choice) {
                 case 1:
                     addProduct();
                     break;
@@ -336,81 +736,81 @@ public class InventoryManagementSystem {
                     deleteProduct();
                     break;
                 case 4:
-                    viewInventory();
+                    viewInventoryItems();
                     break;
                 case 5:
-                    inventorySearchAndFilter();
+                    inventorySearchAndFiltering();
                     break;
                 case 6:
                     placeOrders();
                     break;
                 case 7:
-                    viewPurchases();
+                    addSells();
                     break;
                 case 8:
-                    System.out.println("Logging out of Employee account.");
-                    break;
+                    System.out.println("Logging out from employee account.");
+                    return;
                 default:
-                    System.out.println("Invalid choice. Please enter a valid option.");
+                    System.out.println("Invalid choice. Please enter again.");
             }
-        } while (employeeChoice != 8);
-    }
-
-    private static void viewInventory() {
-        List<Product> products = inventory.getProducts();
-        System.out.println("Current Inventory:");
-        for (Product product : products) {
-            System.out.println(product);
         }
     }
-
-    private static void viewPurchases() {
-        List<Purchase> purchases = inventory.getPurchases();
-        System.out.println("Purchase History:");
-        for (Purchase purchase : purchases) {
-            System.out.println(purchase);
-        }
-    }
-
+    
     private static void placeOrders() {
-        System.out.print("Enter the name of the product to order: ");
-        String productName = scanner.next();
-
-        Product product = findProductByName(productName);
-        if (product != null) {
-            System.out.print("Enter the quantity to order: ");
-            int orderQuantity = scanner.nextInt();
-            double totalPrice = orderQuantity * product.getPrice();
-
-            Purchase purchase = new Purchase(product, orderQuantity, totalPrice);
-            inventory.getPurchases().add(purchase); 
-            product.setQuantity(product.getQuantity() + orderQuantity);
-
-            System.out.println("Order placed successfully: " + purchase);
-        } else {
-            System.out.println("Product not found.");
+        System.out.println("Place Orders:");
+    
+        while (true) {
+            System.out.println("Enter the product ID to order (or type 'done' to finish):");
+            String productId = scanner.nextLine();
+    
+            if (productId.equalsIgnoreCase("done")) {
+                break;
+            }
+    
+            Product product = findProductById(productId);
+    
+            if (product != null) {
+                System.out.println("Enter the quantity to order:");
+                int quantityToOrder = scanner.nextInt();
+                scanner.nextLine(); // Consume the newline
+    
+                if (quantityToOrder > 0 && quantityToOrder <= product.getQuantity()) {
+                    // Update the inventory
+                    product.setQuantity(product.getQuantity() - quantityToOrder);
+    
+                    // Add to the sells data
+                    double totalPrice = quantityToOrder * product.getPrice();
+                    Sells sell = new Sells(product.getProductId(), quantityToOrder, totalPrice);
+                    sells.add(sell);
+                    sell.saveToFile();
+    
+                    System.out.println("Order placed successfully.");
+                } else {
+                    System.out.println("Invalid quantity or insufficient stock. Please try again.");
+                }
+            } else {
+                System.out.println("Product not found. Please enter a valid product ID.");
+            }
         }
     }
-
-    private static void initializeData() {
-        Product product1 = new Product("Laptop", 999.99, 20, "Electronics");
-        Product product2 = new Product("Smartphone", 499.99, 30, "Electronics");
-        Product product3 = new Product("Chair", 49.99, 50, "Furniture");
-        Product product4 = new Product("Desk", 129.99, 25, "Furniture");
-
-        inventory.addProduct(product1);
-        inventory.addProduct(product2);
-        inventory.addProduct(product3);
-        inventory.addProduct(product4);
-
-        inventory.addCategory("Electronics");
-        inventory.addCategory("Furniture");
-
-        employeeManagement.addEmployee("JohnDoe","jon","Jon1234");
-
-        userCredentials.put("admin", "admin12345");
-        userCredentials.put("JohnDoe", "employee123");
-        userCredentials.put("JaneSmith", "employee123");
+    
+    private static Product findProductById(String productId) {
+        for (Product product : products) {
+            if (product.getProductId().equals(productId)) {
+                return product;
+            }
+        }
+        return null;
     }
-}
 
+    private static Category findCategoryById(String categoryId) {
+        for (Category category : categories) {
+            if (category.getCategoryId().equals(categoryId)) {
+                return category;
+            }
+        }
+        return null;
+    }
+
+    
+}

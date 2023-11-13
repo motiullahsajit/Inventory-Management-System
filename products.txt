@@ -1,0 +1,2 @@
+123,Laptop,1000.0,12,789,Electornics
+45,Monitor,1999.0,8,46,Electronics
