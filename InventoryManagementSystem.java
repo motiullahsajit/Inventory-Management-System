@@ -3,204 +3,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 
-class User {
-    private String username;
-    private String password;
-
-    public User(String username, String password) {
-        this.username = username;
-        this.password = password;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-}
-
-class Admin extends User {
-    public Admin(String username, String password) {
-        super(username, password);
-    }
-}
-
-
-class Employee extends User {
-    public Employee(String username, String password) {
-        super(username, password);
-    }
-
-    // Save employee data to a text file
-    public void saveToFile() {
-        try (PrintWriter writer = new PrintWriter(new FileWriter("employees.txt", true))) {
-            writer.println(getUsername() + "," + getPassword());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-      public void removeFromDatabase() {
-        List<String> lines = new ArrayList<>();
-    
-        try (BufferedReader reader = new BufferedReader(new FileReader("employees.txt"))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (!line.startsWith(getUsername() + ",")) {
-                    lines.add(line);
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    
-        try (PrintWriter writer = new PrintWriter(new FileWriter("employees.txt"))) {
-            for (String line : lines) {
-                writer.println(line);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-    
-}
-
-class Product {
-    private String productId;
-    private String productName;
-    private double price;
-    private int quantity;
-    private String categoryId; // New field for category
-    private String categoryName; // New field for category name
-
-    public Product(String productId, String productName, double price, int quantity, String categoryId, String categoryName) {
-        this.productId = productId;
-        this.productName = productName;
-        this.price = price;
-        this.quantity = quantity;
-        this.categoryId = categoryId;
-        this.categoryName = categoryName;
-    }
-
-    public String getProductId() {
-        return productId;
-    }
-
-    public String getProductName() {
-        return productName;
-    }
-
-    public double getPrice() {
-        return price;
-    }
-
-    public int getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(int quantity) {
-        this.quantity = quantity;
-    }
-
-    public void setProductName(String productName) {
-        this.productName = productName;
-    }
-
-    public void setPrice(double price) {
-        this.price = price;
-    }
-
-    public String getCategoryId() {
-        return categoryId;
-    }
-
-    public String getCategoryName() {
-        return categoryName;
-    }
-
-    public void saveToFile() {
-        try (PrintWriter writer = new PrintWriter(new FileWriter("products.txt", true))) {
-            writer.println(productId + "," + productName + "," + price + "," + quantity + "," + categoryId + "," + categoryName);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-}
-
-class Category {
-    private String categoryId;
-    private String categoryName;
-
-    public Category(String categoryId, String categoryName) {
-        this.categoryId = categoryId;
-        this.categoryName = categoryName;
-    }
-
-    public String getCategoryId() {
-        return categoryId;
-    }
-
-    public String getCategoryName() {
-        return categoryName;
-    }
-
-    public void saveToFile() {
-        try (PrintWriter writer = new PrintWriter(new FileWriter("categories.txt", true))) {
-            writer.println(categoryId + "," + categoryName);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-}
-
-class Sells {
-    private String productId;
-    private int quantitySold;
-    private double totalPrice;
-
-    public Sells(String productId, int quantitySold, double totalPrice) {
-        this.productId = productId;
-        this.quantitySold = quantitySold;
-        this.totalPrice = totalPrice;
-    }
-
-    public String getProductId() {
-        return productId;
-    }
-
-    public int getQuantitySold() {
-        return quantitySold;
-    }
-
-    public double getTotalPrice() {
-        return totalPrice;
-    }
-
-    public void saveToFile() {
-        try (PrintWriter writer = new PrintWriter(new FileWriter("sells.txt", true))) {
-            writer.println(serialize());
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.err.println("Error saving sells data to file.");
-        }
-    }
-
-    private String serialize() {
-        return String.format("%s,%d,%.2f", productId, quantitySold, totalPrice);
-    }
-
-    public static Sells deserialize(String data) {
-        Scanner scanner = new Scanner(data);
-        scanner.useDelimiter(",");
-        String productId = scanner.next();
-        int quantitySold = scanner.nextInt();
-        double totalPrice = scanner.nextDouble();
-        scanner.close();
-        return new Sells(productId, quantitySold, totalPrice);
-    }
-}
-
 class InventoryManagementSystem {
     private static Scanner scanner = new Scanner(System.in);
     private static List<Product> products = new ArrayList<>();
@@ -271,7 +73,7 @@ class InventoryManagementSystem {
             System.out.print("Enter you choice: ");
 
             int choice = scanner.nextInt();
-            scanner.nextLine(); // Consume the newline
+            scanner.nextLine();
 
             switch (choice) {
                 case 1:
@@ -334,7 +136,7 @@ class InventoryManagementSystem {
         double price = scanner.nextDouble();
         System.out.println("Enter product quantity:");
         int quantity = scanner.nextInt();
-        scanner.nextLine(); // Consume the newline
+        scanner.nextLine(); 
         System.out.println("Enter category ID:");
         String categoryId = scanner.nextLine();
         System.out.println("Enter category name:");
@@ -421,7 +223,6 @@ class InventoryManagementSystem {
             sells.add(newSells);
             newSells.saveToFile();
 
-            // Update product quantity
             product.setQuantity(product.getQuantity() - quantitySold);
 
             System.out.println("Sells recorded successfully.");
@@ -433,11 +234,9 @@ class InventoryManagementSystem {
     private static void generateSellsReport() {
         System.out.println("Generating Sells Report:");
     
-        // Summarize sells data
         double totalRevenue = sells.stream().mapToDouble(Sells::getTotalPrice).sum();
         System.out.println("Total Revenue: $" + totalRevenue);
     
-        // Display individual sells
         for (Sells sell : sells) {
             System.out.println("Product ID: " + sell.getProductId() +
                     " | Quantity Sold: " + sell.getQuantitySold() +
@@ -448,7 +247,6 @@ class InventoryManagementSystem {
     private static void stockLevelManagement() {
         System.out.println("Stock Level Management:");
     
-        // Display stock levels for each product
         for (Product product : products) {
             System.out.println("Product ID: " + product.getProductId() +
                     " | Product Name: " + product.getProductName() +
@@ -459,10 +257,9 @@ class InventoryManagementSystem {
     private static void orderNewStock() {
         System.out.println("Ordering New Stock:");
     
-        // Simulate ordering new stock (increase quantity for each product)
         for (Product product : products) {
             int currentStock = product.getQuantity();
-            int additionalStock = 10; // You can adjust this value as needed
+            int additionalStock = 10;
             product.setQuantity(currentStock + additionalStock);
             System.out.println("Ordered " + additionalStock + " units of " +
                     product.getProductName() + " (Product ID: " + product.getProductId() + ")");
@@ -491,7 +288,7 @@ class InventoryManagementSystem {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(",");
-                if (parts.length == 6) { // Assuming 6 fields: productId, productName, price, quantity, categoryId, categoryName
+                if (parts.length == 6) { 
                     Product product = new Product(parts[0], parts[1], Double.parseDouble(parts[2]),
                             Integer.parseInt(parts[3]), parts[4], parts[5]);
                     products.add(product);
@@ -552,7 +349,6 @@ class InventoryManagementSystem {
         System.out.println("Enter category ID to search:");
         String categoryId = scanner.nextLine();
 
-        // Find products in the specified category
         List<Product> productsInCategory = products.stream()
                 .filter(product -> product.getCategoryId().equals(categoryId))
                 .collect(Collectors.toList());
@@ -581,7 +377,7 @@ private static void exportDataToCSVOrExcel() {
     System.out.print("Enter you choice: ");
 
     int choice = scanner.nextInt();
-    scanner.nextLine(); // Consume the newline
+    scanner.nextLine(); 
 
     switch (choice) {
         case 1:
@@ -633,30 +429,29 @@ private static void exportDataToCSVOrExcel() {
     
         Employee newEmployee = new Employee(username, password);
         employees.add(newEmployee);
-        newEmployee.saveToFile(); // Save employee data to file
+        newEmployee.saveToFile(); 
         System.out.println("Employee added successfully.");
     }
     
-private static List<Employee> readEmployeesFromFile(String filename) {
-    List<Employee> employees = new ArrayList<>();
+    private static List<Employee> readEmployeesFromFile(String filename) {
+        List<Employee> employees = new ArrayList<>();
 
-    try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
-        String line;
-        while ((line = reader.readLine()) != null) {
-            String[] parts = line.split(",");
-            if (parts.length == 2) { // Assuming 2 fields: username, password
-                Employee employee = new Employee(parts[0], parts[1]);
-                employees.add(employee);
+        try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(",");
+                if (parts.length == 2) { 
+                    Employee employee = new Employee(parts[0], parts[1]);
+                    employees.add(employee);
+                }
             }
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("Error reading employees from file.");
         }
-    } catch (IOException e) {
-        e.printStackTrace();
-        System.err.println("Error reading employees from file.");
+
+        return employees;
     }
-
-    return employees;
-}
-
 
     private static Employee findEmployeeByUsername(String username) {
         List<Employee> employees = readEmployeesFromFile("employees.txt");
@@ -677,7 +472,7 @@ private static List<Employee> readEmployeesFromFile(String filename) {
         Employee employee = findEmployeeByUsername(username);
         if (employee != null) {
             employees.remove(employee);
-            employee.removeFromDatabase(); // Remove employee data from file
+            employee.removeFromDatabase(); 
             System.out.println("Employee removed successfully.");
         } else {
             System.out.println("Employee not found.");
@@ -694,20 +489,15 @@ private static List<Employee> readEmployeesFromFile(String filename) {
     
         if (employee != null && verifyEmployeePassword(employee, password)) {
             System.out.println("Employee login successful.");
-            employeeMenu();  // Redirect to the employee menu
+            employeeMenu();  
         } else {
             System.out.println("Invalid credentials. Returning to the main menu.");
         }
     }
     
-    
     private static boolean verifyEmployeePassword(Employee employee, String enteredPassword) {
-        // Implement a more secure password verification mechanism here
-        // For simplicity, we compare passwords as plain text in this example
         return employee.getPassword().equals(enteredPassword);
     }
-    
-  
     
     private static void employeeMenu() {
         while (true) {
@@ -723,7 +513,7 @@ private static List<Employee> readEmployeesFromFile(String filename) {
             System.out.print("Enter you choice: ");
     
             int choice = scanner.nextInt();
-            scanner.nextLine(); // Consume the newline
+            scanner.nextLine(); 
     
             switch (choice) {
                 case 1:
@@ -772,13 +562,12 @@ private static List<Employee> readEmployeesFromFile(String filename) {
             if (product != null) {
                 System.out.println("Enter the quantity to order:");
                 int quantityToOrder = scanner.nextInt();
-                scanner.nextLine(); // Consume the newline
+                scanner.nextLine(); 
     
                 if (quantityToOrder > 0 && quantityToOrder <= product.getQuantity()) {
-                    // Update the inventory
+
                     product.setQuantity(product.getQuantity() - quantityToOrder);
     
-                    // Add to the sells data
                     double totalPrice = quantityToOrder * product.getPrice();
                     Sells sell = new Sells(product.getProductId(), quantityToOrder, totalPrice);
                     sells.add(sell);
