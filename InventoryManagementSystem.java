@@ -20,7 +20,7 @@ class InventoryManagementSystem {
             System.out.print("Enter you choice: ");
 
             int choice = scanner.nextInt();
-            scanner.nextLine(); // Consume the newline
+            scanner.nextLine(); 
 
             switch (choice) {
                 case 1:
@@ -323,7 +323,7 @@ class InventoryManagementSystem {
         System.out.print("Enter you choice: ");
 
         int choice = scanner.nextInt();
-        scanner.nextLine(); // Consume the newline
+        scanner.nextLine(); 
 
         switch (choice) {
             case 1:
@@ -380,54 +380,54 @@ class InventoryManagementSystem {
             System.out.println("No products found in the specified category.");
         }
     }
-
-
     
-private static void exportDataToCSVOrExcel() {
-    clearScreen();
-    System.out.println("Export Data:");
-    System.out.println("1. Export Inventory Data");
-    System.out.println("2. Export Sells Data");
-    System.out.println("3. Back to Menu");
-    System.out.print("Enter you choice: ");
+    private static void exportDataToCSVOrExcel() {
+        clearScreen();
+        System.out.println("Export Data:");
+        System.out.println("1. Export Inventory Data");
+        System.out.println("2. Export Sells Data");
+        System.out.println("3. Back to Menu");
+        System.out.print("Enter you choice: ");
 
-    int choice = scanner.nextInt();
-    scanner.nextLine(); 
+        int choice = scanner.nextInt();
+        scanner.nextLine(); 
 
-    switch (choice) {
-        case 1:
-            exportInventoryData();
-            break;
-        case 2:
-            exportSellsData();
-            break;
-        case 3:
-            System.out.println("Returning to the main menu.");
-            break;
-        default:
-            System.out.println("Invalid choice. Returning to the main menu.");
+        switch (choice) {
+            case 1:
+                exportInventoryData();
+                break;
+            case 2:
+                exportSellsData();
+                break;
+            case 3:
+                System.out.println("Returning to the main menu.");
+                break;
+            default:
+                System.out.println("Invalid choice. Returning to the main menu.");
+        }
     }
-}
 
     private static void exportInventoryData() {
-        exportData("inventory.csv", products);
+        List<Product> products = readProductsFromFile("products.txt");
+        exportDataInv("inventory.csv", products);
         System.out.println("Inventory data exported to 'inventory.csv'");
     }
 
     private static void exportSellsData() {
-        exportData("sells.csv", sells);
+        List<Sells> sells = readSellsFromFile("sells.txt");
+        exportDataSells("sells.csv", sells);
         System.out.println("Sells data exported to 'sells.csv'");
     }
-
-    private static <T> void exportData(String filename, List<T> dataList) {
+    
+    private static void exportDataSells(String filename, List<Sells> sells) {
         try (PrintWriter writer = new PrintWriter(new FileWriter(filename))) {
-            if (!dataList.isEmpty()) {
-                // Write header
-                writer.println(dataList.get(0).toString());
+            if (!sells.isEmpty()) {
 
-                // Write data
-                for (T data : dataList) {
-                    writer.println(data);
+                writer.println("Product ID,Quantity Sold,Total Price");
+ 
+                for (Sells sell : sells) {
+                    writer.println(sell.getProductId() + "," + sell.getQuantitySold() +
+                            "," + sell.getTotalPrice());
                 }
             }
         } catch (IOException e) {
@@ -435,6 +435,45 @@ private static void exportDataToCSVOrExcel() {
             System.err.println("Error exporting data to file.");
         }
     }
+    
+    private static void exportDataInv(String filename, List<Product> products) {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(filename))) {
+            if (!products.isEmpty()) {
+
+                writer.println("Product ID,Product Name,Quantity");
+
+                for (Product product : products) {
+                    writer.println(product.getProductId() + "," + product.getProductName() +
+                            "," + product.getQuantity());
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("Error exporting data to file.");
+        }
+    }
+    
+    
+    private static List<Sells> readSellsFromFile(String filename) {
+        List<Sells> sells = new ArrayList<>();
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(",");
+                if (parts.length == 3) {
+                    Sells sell = new Sells(parts[0], Integer.parseInt(parts[1]), Double.parseDouble(parts[2]));
+                    sells.add(sell);
+                }
+            }
+        } catch (IOException | NumberFormatException e) {
+            e.printStackTrace();
+            System.err.println("Error reading sells from file.");
+        }
+
+        return sells;
+    }
+
 
     private static void addEmployee() {
         clearScreen();
